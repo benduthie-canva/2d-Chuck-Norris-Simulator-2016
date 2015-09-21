@@ -1,23 +1,23 @@
-var Player = function() 
+var Enemy = function() 
 {
 	this.image = document.createElement("img");
-	this.x = canvas.width/2;
-	this.y = canvas.height/2;
-	this.width = 159;
-	this.height = 163;
-	this.image.src = "hero.png";
+	this.x = canvas.width/4;
+	this.y = canvas.height/4;
+	this.width = 100;
+	this.height = 100;
+	this.image.src = "spaghetti2.png";
 	this.rotation = 0;
 };
-Player.prototype.update = function(deltaTime)
+Enemy.prototype.update = function(deltaTime)
 {
 	if( typeof(this.rotation) == "undefined" )
 		this.rotation = 0;
 	
-	if(keyboard.isKeyDown(keyboard.KEY_LEFT) == true)
+	if(keyboard.isKeyDown(keyboard.KEY_SPACE) == true)
 	{
 		this.rotation -= deltaTime;
 	}
-	else if(keyboard.isKeyDown(keyboard.KEY_RIGHT) == true)
+	else
 	{
 		this.rotation += deltaTime;
 	}
@@ -25,7 +25,7 @@ Player.prototype.update = function(deltaTime)
 	
 	
 }
-Player.prototype.draw = function()
+Enemy.prototype.draw = function()
 {
 	context.save();
 	context.translate(this.x, this.y);
