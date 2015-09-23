@@ -10,12 +10,12 @@ Vector2.prototype.set = function(x,y)
 	this.y = y;
 };
 
-Vector2.prototype.normalise = function()
+Vector2.prototype.normalize = function()
 {
 	var length = Math.sqrt(this.x*this.x + this.y*this.y);
 	
-	this.normalX = this.x / length;
-	this.normalY = this.y / length;
+	this.x = this.x / length;
+	this.y = this.y / length;
 };
 
 Vector2.prototype.add = function (vector)
@@ -30,7 +30,7 @@ Vector2.prototype.subtract = function (vector)
 	this.y -= vector.y;
 };
 
-Vectir2.prototype.multiplyScalar = function (scalar)
+Vector2.prototype.multiplyScalar = function (scalar)
 {
 	this.x *= scalar;
 	this.y *= scalar;

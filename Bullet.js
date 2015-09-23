@@ -1,20 +1,21 @@
 var Bullet = function() 
 {
 	this.image = document.createElement("img");
-	this.x = player.x;
-	this.y = player.x;
+	this.x = player.position.x;
+	this.y = player.position.y;
 	this.width = 40;
 	this.height = 20;
 	this.image.src = "bullet.png";
 	this.rotation = player.rotation;
-	this.velocityX = 69;
-	this.velocityY = 69;
+
+	this.velocity = new Vector2();
+	this.velocity.set(Math.cos(player.rotation) * 69, Math.sin(player.rotation) * 69);
 };
 
 Bullet.prototype.update = function(deltaTime)
 {
-	this.x += this.velocityX * deltaTime;
-	this.y += this.velocityY * deltaTime;	
+	this.x += this.velocity.x * deltaTime;
+	this.y += this.velocity.y * deltaTime;	
 }
 Bullet.prototype.draw = function()
 {
@@ -23,13 +24,4 @@ Bullet.prototype.draw = function()
 	context.rotate(this.rotation);
 	context.drawImage(this.image, -this.width/2, -this.height/2);
 	context.restore();
-}
-
-Bullet.prototype.spawnBullet = function()
-{
-	this.rotation = player.rotation;
-	this.velocityX = Math.cos(player.rotation) * 69;
-	this.velocityY = Math.sin(player.rotation) * 69;
-	this.x = player.x;
-	this.y = player.y;
 }
