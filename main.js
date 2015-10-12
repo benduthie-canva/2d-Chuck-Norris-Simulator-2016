@@ -66,6 +66,16 @@ var STATE_GAME = 1;
 var STATE_GAMEOVER = 2;
 var gameState = STATE_SPLASH;
 
+var LAYER_OBJECT_ENEMIES = 3;
+var LAYER_OBJECT_TRIGGERS = 4;
+
+var musicBackground;
+var sfxFire;
+
+var ENEMY_MAXDX = METER * 5;
+var ENEMY_ACCEL = ENEMY_MAXDX * 2;
+
+
 
 
 
@@ -78,10 +88,11 @@ var fps = 0;
 var fpsCount = 0;
 var fpsTime = 0;
 
-var enemy = new Enemy();
 var player = new Player();
 var keyboard = new Keyboard();
 var bullets = []
+var enemies = []
+enemies.push(new Enemy());
 
 // load an image to draw
 var chuckNorris = document.createElement("img");
@@ -90,7 +101,8 @@ chuckNorris.src = "hero.png";
 var tileset = document.createElement("img");
 tileset.src = "tileset.png";
 
-
+var heartImage = document.createElement("img");
+heartImage.src = "heart.png";
 
 
 
@@ -127,10 +139,58 @@ function initialize()
 				// if we haven't set this cell's value, then set it to 0 now
 				cells[layerIdx][y][x] = 0;
 				}
+				
 				idx++;
 			}
 		}
 	}
+	
+	idx = 0;
+for(var y = 0; y < level1.layers[LAYER_OBJECT_ENEMIES].height; y++) {
+for(var x = 0; x < level1.layers[LAYER_OBJECT_ENEMIES].width; x++) {
+if(level1.layers[LAYER_OBJECT_ENEMIES].data[idx] != 0) {
+var px = tileToPixel(x);
+var py = tileToPixel(y);
+var e = new Enemy(px, py);
+enemies.push(e);
+}
+idx++;
+}
+} 
+	
+	musicBackground = new Howl
+	(
+		{
+			urls: ["background.ogg"],
+			loop: true,
+			buffer: true,
+			volume: 0.5
+		} 
+	);
+	
+	musicBackground.play();
+	sfxFire = new Howl
+	(
+		{
+			urls: ["fireEffect.ogg"],
+			buffer: true,
+			volume: 1,
+			onend: function() 
+			{
+				isSfxPlaying = false;
+			}
+		}
+	);
+
+}
+
+function intersects(o1, o2)
+{
+	if(o2.position.y + o2.height < o1.position.y || o2.position.x + o2.width < o1.position.x ||	o2.position.x > o1.position.x + o1.width || o2.position.y > o1.position.y + o1.height)
+	{
+		return false;
+	}
+	return true;
 }
 
 function cellAtPixelCoord(layer, x,y)
@@ -175,23 +235,45 @@ function bound(value, min, max)
 
 function drawMap()
 {
-	for(var layerIdx=0; layerIdx<LAYER_COUNT; layerIdx++)
+	var maxTiles = Math.floor(SCREEN_WIDTH / TILE) + 2;
+	var tileX = pixelToTile(player.position.x);
+	var offsetX = TILE + Math.floor(player.position.x%TILE);
+	startX = tileX - Math.floor(maxTiles / 2);
+	
+	if(startX < -1)
 	{
-		var idx = 0;
+		startX = 0;
+		offsetX = 0;
+	}
+	
+	if(startX > MAP.tw - maxTiles)
+	{
+		startX = MAP.tw - maxTiles + 1;
+		offsetX = TILE;
+	}
+		
+		worldOffsetX = startX * TILE + offsetX;
+	for( var layerIdx=0; layerIdx < LAYER_COUNT; layerIdx++ )
+	{
 		for( var y = 0; y < level1.layers[layerIdx].height; y++ )
 		{
-			for( var x = 0; x < level1.layers[layerIdx].width; x++ )
+			var idx = y * level1.layers[layerIdx].width + startX;
+			for( var x = startX; x < startX + maxTiles; x++ )
 			{
 				if( level1.layers[layerIdx].data[idx] != 0 )
 				{
-				// the tiles in the Tiled map are base 1 (meaning a value of 0 means no tile), so subtract one from the tileset id to get the
-				// correct tile
-				var tileIndex = level1.layers[layerIdx].data[idx] - 1;
-				var sx = TILESET_PADDING + (tileIndex % TILESET_COUNT_X) * (TILESET_TILE + TILESET_SPACING);
-				var sy = TILESET_PADDING + (Math.floor(tileIndex / TILESET_COUNT_Y)) * (TILESET_TILE + TILESET_SPACING);
-				context.drawImage(tileset, sx, sy, TILESET_TILE, TILESET_TILE, x*TILE, (y-1)*TILE, TILESET_TILE, TILESET_TILE);
+					// the tiles in the Tiled map are base 1 (meaning a value of 0 means no tile),
+					// so subtract one from the tileset id to get the
+					// correct tile
+					var tileIndex = level1.layers[layerIdx].data[idx] - 1;
+					var sx = TILESET_PADDING + (tileIndex % TILESET_COUNT_X) *
+					(TILESET_TILE + TILESET_SPACING);
+					var sy = TILESET_PADDING + (Math.floor(tileIndex / TILESET_COUNT_Y)) *
+					(TILESET_TILE + TILESET_SPACING);
+					context.drawImage(tileset, sx, sy, TILESET_TILE, TILESET_TILE,
+					(x-startX)*TILE - offsetX, (y-1)*TILE, TILESET_TILE, TILESET_TILE);
 				}
-			idx++;
+				idx++;
 			}
 		}
 	}
@@ -208,6 +290,8 @@ function runSplash(deltaTime)
 	context.fillStyle= '#000000';
 	context.fillText("Splash Screen   ", 10, 20);
 	context.fillText("Press space to play   ", 10, 50);
+	
+	
 
 }
 
@@ -240,37 +324,60 @@ function run()
 		break;	
 			
 		case STATE_GAME:
-		drawMap();
 
 		// update and draw sprites
 
 		
 		
 		// loop for updating all bullets
+		
+		context.fillStyle = "yellow";
+		context.font="32px Arial";
+		var scoreText = "Score: " + player.score;
+		context.fillText(scoreText, SCREEN_WIDTH - 170, 35);
+		
+		
+		
+	
+		
+		
+		
+		player.update(deltaTime);
+
+		
+		drawMap();
+		
+		for(var i=0; i<player.lives; i++)
+		{
+			context.drawImage(heartImage, 20 + ((heartImage.width+2)*i), 450);
+		}
+		
 		for (var i = 0; i<bullets.length; i++)
 		{
 			bullets[i].update(deltaTime);
 			bullets[i].draw();
 		}
-		
-		player.update(deltaTime);
-		player.draw();
-		
-		
-		enemy.update(deltaTime);
-		enemy.draw();
-		
-		// spawn bullet if spacebar is pressed. Could make better at a later date or put into a separate JavaScript	file
-		if(keyboard.isKeyDown(keyboard.KEY_SHIFT) == true)
+		for (var i = 0; i<enemies.length; i++)
 		{
-			if (player.shootTimer < 1)
+			enemies[i].update(deltaTime);
+			enemies[i].draw();
+		}
+		
+		for (var i = 0; i<bullets.length; i++)
+		{
+			for (var a = 0; a<enemies.length; a++)
 			{
-				bullets.push(new Bullet());
-				player.shootTimer += 1.5;
+				if (intersects(bullets[i], enemies[a]) == true)
+				{
+					enemies.splice(i, 1)
+					bullets.splice(a, 1)
+					break;
+				}
 			}
 		}
 		
-		
+		player.draw();
+
 
 		// update the frame counter
 		fpsTime += deltaTime;

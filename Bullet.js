@@ -1,27 +1,35 @@
 var Bullet = function() 
 {
 	this.image = document.createElement("img");
-	this.x = player.position.x;
-	this.y = player.position.y;
+	
+	this.position = new Vector2();
+	this.position.set(player.position.x, player.position.y);
+	
 	this.width = 40;
 	this.height = 20;
 	this.image.src = "bullet.png";
-	this.rotation = player.rotation;
+	
+	if (player.direction == 0)
+	{
+		this.velocity = -20
+		this.image.src = "bulletleft.png";
 
-	this.velocity = new Vector2();
-	this.velocity.set(Math.cos(player.rotation) * 69, Math.sin(player.rotation) * 69);
+	}
+	if (player.direction == 1)
+	{
+			this.image.src = "bulletright.png";
+
+		this.velocity = 20
+	}
 };
 
 Bullet.prototype.update = function(deltaTime)
 {
-	this.x += this.velocity.x * deltaTime;
-	this.y += this.velocity.y * deltaTime;	
+	this.position.x += this.velocity * deltaTime * 60;
 }
 Bullet.prototype.draw = function()
 {
 	context.save();
-	context.translate(this.x, this.y);
-	context.rotate(this.rotation);
-	context.drawImage(this.image, -this.width/2, -this.height/2);
+	context.drawImage(this.image, this.position.x  - worldOffsetX, this.position.y );
 	context.restore();
 }

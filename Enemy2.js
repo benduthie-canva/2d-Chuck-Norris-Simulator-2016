@@ -29,7 +29,6 @@ var Enemy = function()
 	
 Enemy.prototype.update = function(deltaTime)
 {
-	this.moveRight = true;
 	
 	if(this.pause > 0)
 	{
@@ -85,5 +84,5 @@ Enemy.prototype.update = function(deltaTime)
 
 Enemy.prototype.draw = function()
 {
-	context.drawImage(this.image, this.position.x - worldOffsetX, this.position.y);
+	this.sprite.draw(context, this.position.x - worldOffsetX, this.position.y);
 }
